@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String, Float, DateTime
 from datetime import date
 from .database import Base
+from datetime import datetime
+
 
 class Workout(Base):
     __tablename__ = "workouts"
@@ -9,4 +11,7 @@ class Workout(Base):
     exercise = Column(String)
     sets = Column(Integer)
     reps = Column(Integer)
-    workout_date = Column(Date, default=date.today())  # Match the schema change
+    weight = Column(Float, nullable=True)  # New field
+    duration = Column(Integer, nullable=True)  # New field (minutes)
+    notes = Column(String, nullable=True)  # New field
+    date = Column(DateTime, default=datetime.utcnow)  # Existing field
