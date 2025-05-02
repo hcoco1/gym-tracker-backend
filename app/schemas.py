@@ -1,21 +1,25 @@
 from pydantic import BaseModel
-from datetime import date
-from typing import Optional
 from datetime import datetime
 
-class WorkoutBase(BaseModel):
+class WorkoutSetBase(BaseModel):
     exercise: str
-    sets: int
+    set_number: int
     reps: int
-    weight: Optional[float] = None
-    duration: Optional[int] = None
-    notes: Optional[str] = None
-    date: Optional[datetime] = None
+    weight: float
+    day: str
+    type: str
+    date: datetime  # Add this line
 
-class WorkoutCreate(WorkoutBase):
-    pass
+class WorkoutSetCreate(BaseModel):
+    exercise: str
+    set_number: int
+    reps: int
+    weight: float
+    day: str
+    type: str
+    date: datetime  # Make this field required
 
-class Workout(WorkoutBase):
+class WorkoutSet(WorkoutSetBase):
     id: int
     
     class Config:

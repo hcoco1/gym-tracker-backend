@@ -4,17 +4,22 @@ from . import crud, models, schemas
 from .database import SessionLocal, engine
 from fastapi.middleware.cors import CORSMiddleware
 
-# Create tables
+
 models.Base.metadata.create_all(bind=engine)
 
+# Add explicit API prefix
 app = FastAPI()
 
-# CORS Configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+from fastapi import APIRouter
+
+router = APIRouter()
+
+
+
+app.include_router(
+    router,
+    prefix="/api",  # Add this line
+    tags=["workouts"]
 )
 
 # Dependency
@@ -25,39 +30,50 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/workouts/", response_model=schemas.Workout)
-def create_workout(workout: schemas.WorkoutCreate, db: Session = Depends(get_db)):
-    return crud.create_workout(db, workout)
+# Add these endpoints directly under the app
+# Remove /api prefix from endpoint definitions
+@app.post("/workouts/", response_model=list[schemas.WorkoutSet])
+def create_workout_sets(sets: list[schemas.WorkoutSetCreate], db: Session = Depends(get_db)):
+    return crud.create_multiple_sets(db=db, sets=sets)
 
-@app.get("/workouts/", response_model=list[schemas.Workout])
+@app.get("/workouts/", response_model=list[schemas.WorkoutSet])
 def read_workouts(db: Session = Depends(get_db)):
-    return crud.get_workouts(db)
+    return crud.get_workout_sets(db)
 
-# PUT endpoint
-@app.put("/workouts/{workout_id}", response_model=schemas.Workout)
-def update_workout(
-    workout_id: int,
-    workout: schemas.WorkoutCreate,
+# Updated PUT endpoint
+@app.put("/workouts/{set_id}", response_model=schemas.WorkoutSet)
+def update_set(
+    set_id: int,
+    workout_set: schemas.WorkoutSetCreate,
     db: Session = Depends(get_db)
 ):
-    db_workout = db.query(models.Workout).filter(models.Workout.id == workout_id).first()
-    if not db_workout:
-        raise HTTPException(status_code=404, detail="Workout not found")
+    db_set = db.query(models.WorkoutSet).filter(models.WorkoutSet.id == set_id).first()
+    if not db_set:
+        raise HTTPException(status_code=404, detail="Set not found")
     
-    for field, value in workout.dict().items():
-        setattr(db_workout, field, value)
+    for field, value in workout_set.dict().items():
+        setattr(db_set, field, value)
     
     db.commit()
-    db.refresh(db_workout)
-    return db_workout
+    db.refresh(db_set)
+    return db_set
 
-# DELETE endpoint
-@app.delete("/workouts/{workout_id}")
-def delete_workout(workout_id: int, db: Session = Depends(get_db)):
-    db_workout = db.query(models.Workout).filter(models.Workout.id == workout_id).first()
-    if not db_workout:
-        raise HTTPException(status_code=404, detail="Workout not found")
+# Updated DELETE endpoint
+@app.delete("/workouts/{set_id}")
+def delete_set(set_id: int, db: Session = Depends(get_db)):
+    db_set = db.query(models.WorkoutSet).filter(models.WorkoutSet.id == set_id).first()
+    if not db_set:
+        raise HTTPException(status_code=404, detail="Set not found")
     
-    db.delete(db_workout)
+    db.delete(db_set)
     db.commit()
-    return {"detail": "Workout deleted"}
+    return {"detail": "Set deleted"}
+
+# Add CORS middleware if needed
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
