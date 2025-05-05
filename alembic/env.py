@@ -8,7 +8,7 @@ from sqlalchemy import pool
 # Add this before 'from alembic import context'
 sys.path.append(str(Path(__file__).resolve().parent.parent))  # Project root
 
-from app.models import Base  # Import your models here
+from app.database.models import Base  # Import your models here
 
 target_metadata = Base.metadata
 
