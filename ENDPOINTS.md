@@ -5,11 +5,11 @@ To verify your API endpoints, let's test each one step-by-step using `curl` comm
 ### **1. Register a New User**
 
 ```bash
-curl -X POST "http://localhost:8000/api/auth/register" \
+curl -X POST "https://gym-tracker-backend-3jsb.onrender.com/api/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
-    "username": "testuser",
-    "email": "user@example.com",
+    "username": "testuser1",
+    "email": "user1@example.com",
     "password": "secretpassword123"
 }'
 ```
