@@ -181,13 +181,3 @@ sqlite> SELECT * FROM workout_sets;
 4. **CORS Issues**: Verify middleware settings if using a frontend.
 
 Let me know if any endpoint behaves unexpectedly! 🚀
-
-
-
-curl -X POST "http://localhost:8000/api/auth/register" \
--H "Content-Type: application/json" \
--d '{
-    "username": "hcoco1",
-    "email": "hcoco1@hotmail.com.com",
-    "password": "Ivan-7430"
-}'
