@@ -1,38 +1,45 @@
-# Stage 1: Build environment
-FROM python:3.11-slim as builder
+# Stage 1 - Build dependencies
+FROM python:3.11-slim AS builder
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/root/.local/bin:$PATH"
+
+# Set working directory
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
 
-# Install system dependencies
+# Install build dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc python3-dev && \
+    apt-get install -y --no-install-recommends gcc python3-dev libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY backend/requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
 
-# Stage 2: Runtime environment
+
+# Stage 2 - Runtime image
 FROM python:3.11-slim
 
-WORKDIR /app
-ENV PATH=/root/.local/bin:$PATH
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/root/.local/bin:$PATH"
 
-# Copy Python dependencies from builder
+# Set working directory
+WORKDIR /app
+
+# Copy installed packages from builder
 COPY --from=builder /root/.local /root/.local
 
 # Copy application code
 COPY backend/app ./app
-COPY backend/database.py .
-COPY backend/main.py .
+COPY backend/.env .env
 
-# Security best practices
-RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+# Optional: copy Alembic if you use it
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini alembic.ini
 
-EXPOSE 8000
-
+# Run the app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
