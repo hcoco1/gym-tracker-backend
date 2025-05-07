@@ -1,45 +1,21 @@
-# Stage 1 - Build dependencies
-FROM python:3.11-slim AS builder
+# Use the official Python base image
+FROM python:3.10-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/root/.local/bin:$PATH"
-
-# Set working directory
+# Set working directory in the container
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc python3-dev libpq-dev && \
-    rm -rf /var/lib/apt/lists/*
+# Copy dependency file first to leverage Docker layer caching
+COPY requirements.txt .
 
 # Install Python dependencies
-COPY backend/requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the entire project (excluding what's in .dockerignore)
+COPY . .
 
-# Stage 2 - Runtime image
-FROM python:3.11-slim
+# Expose FastAPI port (default is 8000)
+EXPOSE 8000
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/root/.local/bin:$PATH"
-
-# Set working directory
-WORKDIR /app
-
-# Copy installed packages from builder
-COPY --from=builder /root/.local /root/.local
-
-# Copy application code
-COPY backend/app ./app
-COPY backend/.env .env
-
-# Optional: copy Alembic if you use it
-COPY backend/alembic ./alembic
-COPY backend/alembic.ini alembic.ini
-
-# Run the app
+# Command to run your app using Uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
